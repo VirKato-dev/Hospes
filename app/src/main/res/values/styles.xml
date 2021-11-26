@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Bordered">
+        <item name="android:background">@android:drawable/editbox_dropdown_light_frame</item>
+    </style>
+</resources>
