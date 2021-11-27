@@ -18,7 +18,7 @@
         android:textStyle="bold" />
 
     <LinearLayout
-        android:id="@+id/l_room_info"
+        android:id="@+id/l_room_detail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
