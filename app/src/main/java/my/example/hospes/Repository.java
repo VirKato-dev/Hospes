@@ -250,8 +250,6 @@ public class Repository {
      * @return список свободных комнат
      */
     public static ArrayList<String> getFreeRooms(int type, long arriveDate, long departDate, String guestId) {
-        //TODO работает неверно
-        // сделать сортировку списка людей по дате заселения
         ArrayList<Room> rooms = getRooms(type);
         ArrayList<String> freeRooms = new ArrayList<>();
         for (Room r : rooms) {
