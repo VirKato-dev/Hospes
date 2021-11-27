@@ -41,7 +41,7 @@ public class Repository {
      * @param login логин/идентификатор уникален для каждого человека
      * @return данные о человеке в виде собственного типа данных Human
      */
-    public static Human findHumanInDB(String login) {
+    public static Human findHumanById(String login) {
         // данные главного Админа системы
         Human man = new Human();
         man.isAdmin = true;
@@ -64,13 +64,13 @@ public class Repository {
                 scanner.useDelimiter("\n");
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
-                    Log.e("find", line);
                     String[] values = line.split("\\|");
                     man.name = values[0];
                     man.login = values[1];
                     man.password = values[2];
                     man.isAdmin = Boolean.parseBoolean(values[3]);
                     man.isGuest = Boolean.parseBoolean(values[4]);
+                    man.sex = Boolean.parseBoolean(values[5]);
                     if (man.login.equals(login)) {
                         break;
                     }
@@ -88,7 +88,7 @@ public class Repository {
 
 
     /***
-     * получить список зарегистрированных операторов
+     * получить список людей из базы
      * @param isGuest гость(true) или сотрудник(false)
      * @return список людей из файла
      */
@@ -104,7 +104,6 @@ public class Repository {
                 scanner.useDelimiter("\n"); // разделитель строк
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
-                    Log.e("get", line);
                     String[] values = line.split("\\|");
                     Human man = new Human();
                     man.name = values[0];
@@ -112,6 +111,7 @@ public class Repository {
                     man.password = values[2];
                     man.isAdmin = Boolean.parseBoolean(values[3]);
                     man.isGuest = Boolean.parseBoolean(values[4]);
+                    man.sex = Boolean.parseBoolean(values[5]);
                     if (man.isGuest == isGuest) {
                         // добавляем в список только выбранную категорию людей
                         people.add(man);
@@ -131,7 +131,7 @@ public class Repository {
      * Удалить человека из файла
      * @param login логин/идентификатор человека
      */
-    public static void removeOperatorByLogin(String login) {
+    public static void removeHumanByLogin(String login) {
         // исключить случай
         File file_from = new File(dir, "users.db");
         if (file_from.exists()) file_from.renameTo(new File(dir, "users.bak"));
@@ -163,7 +163,8 @@ public class Repository {
                 man.isGuest = Boolean.parseBoolean(values[4]);
                 if (!man.login.equals(login)) {
                     // записать в новый файл
-                    line = man.name + "|" + man.login + "|" + man.password + "|" + man.isAdmin + "|" + man.isGuest +"\n";
+                    line = man.name + "|" + man.login + "|" + man.password + "|" +
+                            man.isAdmin + "|" + man.isGuest + "|" + man.sex + "\n";
                     writer.write(line);
                     writer.flush();
                 }
@@ -190,12 +191,103 @@ public class Repository {
             }
             // открыть файл в режиме добавления текста
             Writer fw = new FileWriter(file, true);
-            String line = man.name + "|" + man.login + "|" + man.password + "|" + man.isAdmin + "|" + man.isGuest +"\n";
+            String line = man.name + "|" + man.login + "|" + man.password + "|" +
+                    man.isAdmin + "|" + man.isGuest + "|" + man.sex + "\n";
             fw.write(line);
             fw.flush();
             fw.close();
         } catch (IOException e) {
             Log.e("REPOSITORY add", e.getMessage());
         }
+    }
+
+
+    /***
+     * Получить список комнат.
+     * @param type -1 все возможные комнаты;
+     *             >= 0 тип комфортности комнаты.
+     * @return список комнат
+     */
+    public static ArrayList<Room> getRooms(int type) {
+        ArrayList<Room> rooms = new ArrayList<>();
+
+        File file = new File(dir, "rooms.db");
+        try {
+            if (file.exists()) {
+                InputStream fis = new FileInputStream(file);
+                Reader reader = new InputStreamReader(fis, StandardCharsets.UTF_8);
+                Scanner scanner = new Scanner(reader);
+                scanner.useDelimiter("\n"); // разделитель строк
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    String[] values = line.split("\\|");
+                    Room room = new Room();
+                    room.type = Integer.parseInt(values[0]);
+                    room.number = values[1];
+                    room.cost = Double.parseDouble(values[2]);
+                    room.description = values[3];
+                    if (type < 0) {
+                        rooms.add(room);
+                    } else if (type == room.type) {
+                        // когда комната с нужным типом комфортности обнаружена
+                        rooms.add(room);
+                    }
+                }
+                fis.close();
+            }
+        } catch (IOException e) {
+            Log.e("REPOSITORY get", e.getMessage());
+        }
+        return rooms;
+    }
+
+    /***
+     * Получить список свободных комнат
+     * @param type тип комфортности
+     * @param arriveDate дата заселения
+     * @param departDate дата выселения
+     * @param guestId идентификатор посетителя
+     * @return список свободных комнат
+     */
+    public static ArrayList<String> getFreeRooms(int type, long arriveDate, long departDate, String guestId) {
+        //TODO работает неверно
+        // сделать сортировку списка людей по дате заселения
+        ArrayList<Room> rooms = getRooms(type);
+        ArrayList<String> freeRooms = new ArrayList<>();
+        for (Room r : rooms) {
+            freeRooms.add(r.number);
+        }
+        ArrayList<Human> guests = getPeople(true);
+        for (Human h : guests) {
+            // анализируем данные каждого посетителя
+            String[] val = h.password.split("~");
+            // разбираем поле password
+            // у посетителя это поле содержит больше информации, чем у сотрудника
+            long aDate = Long.parseLong(val[1]); // arriveDate
+            long dDate = Long.parseLong(val[2]); // departDate
+            if (h.login.equals(guestId)) {
+                // не удалять комнату из списка свободных, если в ней редактируемый посетитель
+            } else if ((aDate < arriveDate || dDate >= departDate) || (arriveDate+departDate == 0)) {
+                // если в указанный период комната уже кем-то заселена
+                freeRooms.remove(val[0]); // добавить номер комнаты в список свободных комнат
+            }
+        }
+        return freeRooms;
+    }
+
+    /***
+     * Найти комнату в базе комнат
+     * @param num номер комнаты
+     * @return комната Room
+     */
+    public static Room findRoomByNum(String num) {
+        // получить все комнаты
+        ArrayList<Room> rooms = getRooms(-1);
+        for (Room r : rooms) {
+            // вернуть найденную комнату
+            if (r.number.equals(num)) return r;
+        }
+        // если нет комнаты с таким номером
+        return null;
     }
 }

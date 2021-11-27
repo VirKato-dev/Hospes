@@ -8,7 +8,6 @@ package my.example.hospes;
  * значения в полях login и password несут разный смысл и объём.
  */
 public class Human {
-
     /***
      * ФИО человека
      */
@@ -22,7 +21,7 @@ public class Human {
 
     /***
      * Для оператора - пароль.
-     * Для гостя - информация о комнате, оплате, сроках заселения
+     * Для гостя - номер, дата заселения, дата выселения, примечание
      */
     public String password = "";
 
@@ -36,4 +35,8 @@ public class Human {
      */
     public boolean isGuest = false;
 
+    /***
+     * Пол человека. false - женский; true - мужской.
+     */
+    public boolean sex = false;
 }

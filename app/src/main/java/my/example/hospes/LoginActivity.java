@@ -50,24 +50,29 @@ public class LoginActivity extends AppCompatActivity {
         login = edit_login.getText().toString().trim();
         password = edit_password.getText().toString().trim();
 
-        // ищем пользователя
-        man = Repository.findHumanInDB(login);
-
-        if (man.login.equals(login) && man.password.equals(password)) {
-            // отправить найденного пользователя на соответствующий экран, согласно его роли
-            if (man.isAdmin) {
-                startActivity(new Intent(this, AdminActivity.class));
-            } else {
-                startActivity(new Intent(this, OperatorActivity.class));
-            }
-            Toast.makeText(this, "Добро пожаловать, " + man.name + "!", Toast.LENGTH_LONG).show();
+        if ("".equals(login) || "".equals(password)) {
+            Toast.makeText(this, "Поля 'Логин', 'Пароль' должны быть заполнены", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Такого пользователя не существует.", Toast.LENGTH_LONG).show();
-        }
+            // ищем пользователя
+            man = Repository.findHumanById(login);
+            // null объект не вернётся
 
-        // очистить поля ввода
-        edit_login.setText("");
-        edit_password.setText("");
+            if (man.login.equals(login) && man.password.equals(password)) {
+                // отправить найденного пользователя на соответствующий экран, согласно его роли
+                if (man.isAdmin) {
+                    startActivity(new Intent(this, AdminActivity.class));
+                } else {
+                    startActivity(new Intent(this, OperatorActivity.class));
+                }
+                Toast.makeText(this, "Добро пожаловать, " + man.name + "!", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Такого пользователя не существует.", Toast.LENGTH_LONG).show();
+            }
+
+            // очистить поля ввода
+            edit_login.setText("");
+            edit_password.setText("");
+        }
     }
 
 
