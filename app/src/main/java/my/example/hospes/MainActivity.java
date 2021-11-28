@@ -6,7 +6,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 /***
- * оставим стартовую Активность для заставки
+ * Оставим стартовую Активность для заставки
  */
 public class MainActivity extends AppCompatActivity {
 

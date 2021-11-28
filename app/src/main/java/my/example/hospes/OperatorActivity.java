@@ -360,6 +360,10 @@ public class OperatorActivity extends AppCompatActivity {
     }
 
 
+    /***
+     * Сгенерировать новый уникальный идетификатор
+     * @return идентификатор гостя
+     */
     private String generateUID() {
         Human man;
         String newUID;

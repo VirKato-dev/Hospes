@@ -1,6 +1,5 @@
 package my.example.hospes;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Locale;
 
 /***
@@ -44,7 +42,6 @@ public class RvPeopleAdapter extends RecyclerView.Adapter<RvPeopleAdapter.ViewHo
      * Тип отображаемого списка.
      * "o" - сотрудники
      * "g" - посетители
-     * "r" - комнаты
      */
     private String type;
 
