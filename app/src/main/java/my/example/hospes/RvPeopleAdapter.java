@@ -1,5 +1,6 @@
 package my.example.hospes;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,13 +9,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 /***
  * Адаптер(посредник) между списком данных и видимым списком.
  * Расчитан на вывод данных в зависимости от типа списка людей.
  */
-public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
+public class RvPeopleAdapter extends RecyclerView.Adapter<RvPeopleAdapter.ViewHolder> {
 
     /***
      * ссылка на привязанный список людей
@@ -37,9 +41,10 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
     private ItemLongClickListener longClickListener;
 
     /***
-     * Тип отображаемого списка людей.
+     * Тип отображаемого списка.
      * "o" - сотрудники
      * "g" - посетители
+     * "r" - комнаты
      */
     private String type;
 
@@ -48,7 +53,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
      * Создать адаптер управляющий выводом данных из списка на экран
      * @param people привязанный список
      */
-    public RvAdapter(ArrayList<Human> people, String type) {
+    public RvPeopleAdapter(ArrayList<Human> people, String type) {
         this.type = type;
         setNewList(people);
     }
@@ -91,11 +96,39 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Human man = getItem(position);
         if (type.equals("g")) {
-            // вывод данных о посетителе
-            holder.t_man_name.setText(man.name);
-            holder.t_room_num.setText("000"); // взять из поля password
-            holder.t_room_type.setText("Люкс"); // взять из базы комнат
-            holder.t_room_cost.setText("0.00"); // взять из базы комнат
+            // распаковываем password для получения данных о заселении
+            String[] mRoom = man.password.split("֍");
+            if (mRoom.length > 1) {
+                // нам попались данные гостя
+                String num = mRoom[0]; // номер комнаты
+                long arriveDate = Long.parseLong(mRoom[1]); // дата заселения
+                long departDate = Long.parseLong(mRoom[2]); // дата выселения
+                String notes = "";
+                if (mRoom.length > 3) notes = mRoom[3]; // примечания
+                Room room = Repository.findRoomByNum(num);
+
+                // поставим фамилию перед именем
+                String[] val = man.name.split("֍");
+                String name = val[2] + " " + val[0] + " " + val[1];
+
+                // вывод данных о посетителе
+                holder.t_man_name.setText(name);
+                holder.t_room_num.setText(num); // взят из поля password
+                holder.t_room_type.setText(Room.types.get(room.type)); // взят из базы комнат
+                holder.t_room_cost.setText(String.format(Locale.ENGLISH, "%.2f", room.cost)); // взят из базы комнат
+
+                holder.t_el_adate.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(arriveDate));
+                holder.t_el_ddate.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(departDate));
+                // количество ночей пребывания
+                int tn = (int) (departDate - arriveDate) / (26 * 60 * 60 * 1000);
+                tn++;
+                String nits = "(" + tn + ")";
+                holder.t_el_total_nights.setText(nits);
+                // полная стоимость за время пребывания
+                double tc = tn * room.cost;
+                holder.t_el_total_cost.setText(String.format(Locale.ENGLISH, "%.2f", tc));
+
+            }
         }
         if (type.equals("o")) {
             // вывод данных о сотруднике
@@ -159,9 +192,12 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
     public class ViewHolder extends RecyclerView.ViewHolder {
         private TextView t_man_name;
         private TextView t_man_role;
+
         private TextView t_room_type;
         private TextView t_room_num;
         private TextView t_room_cost;
+        private TextView t_el_adate, t_el_ddate;
+        private TextView t_el_total_nights, t_el_total_cost;
 
 
         private ViewHolder(View itemView) {
@@ -179,6 +215,10 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                 t_room_type = itemView.findViewById(R.id.t_room_type);
                 t_room_num = itemView.findViewById(R.id.t_room_num);
                 t_room_cost = itemView.findViewById(R.id.t_room_cost);
+                t_el_adate = itemView.findViewById(R.id.t_el_adate);
+                t_el_ddate = itemView.findViewById(R.id.t_el_ddate);
+                t_el_total_nights = itemView.findViewById(R.id.t_el_total_nights);
+                t_el_total_cost = itemView.findViewById(R.id.t_el_total_cost);
             }
 
             // привязываем слушатели нажатий к каждому элементу видимого списка
@@ -193,7 +233,8 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    if (longClickListener != null) longClickListener.onItemClick(v, getAdapterPosition());
+                    if (longClickListener != null)
+                        longClickListener.onItemClick(v, getAdapterPosition());
                     return false;
                 }
             });

@@ -10,111 +10,220 @@
         android:id="@+id/scroll_oper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:id="@+id/l_edit_user"
-            style="@style/Bordered"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:orientation="vertical"
-            android:padding="4dp">
-
-            <TextView
-                android:id="@+id/label_edit_oper_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Имя оператора:" />
-
-            <EditText
-                android:id="@+id/edit_oper_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="text" />
-
-            <TextView
-                android:id="@+id/label_edit_oper_login"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Логин оператора:" />
-
-            <EditText
-                android:id="@+id/edit_oper_login"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="text" />
-
-            <TextView
-                android:id="@+id/label_edit_oper_password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Пароль оператора:" />
-
-            <EditText
-                android:id="@+id/edit_guest_password"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="text" />
+            android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/l_edit_room"
+                style="@style/Bordered"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_margin="4dp"
+                android:orientation="vertical"
+                android:padding="4dp"
+                android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/label_male2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="жен." />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/s_oper_sex"
+                <Spinner
+                    android:id="@+id/spin_edit_room_type"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
-                <TextView
-                    android:id="@+id/label_female2"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:id="@+id/l_edit_room_row1"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="муж." />
+                    android:orientation="horizontal">
 
-                <CheckBox
-                    android:id="@+id/check_admin"
+                    <LinearLayout
+                        android:id="@+id/l_edit_room_number"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_edit_room_num"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:text="Номер комнаты:" />
+
+                        <EditText
+                            android:id="@+id/edit_room_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ems="10"
+                            android:inputType="number" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/label_edit_room_cost"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:text="Стоимость за ночь:" />
+
+                        <EditText
+                            android:id="@+id/edit_room_cost"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ems="10"
+                            android:inputType="numberDecimal" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/label_edit_room_desc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Админ" />
+                    android:text="Описание:" />
+
+                <EditText
+                    android:id="@+id/edit_room_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textMultiLine"
+                    android:maxLines="5" />
+
+                <Button
+                    android:id="@+id/b_save_room"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="Сохранить" />
+
             </LinearLayout>
 
-            <Button
-                android:id="@+id/b_oper_save"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/l_edit_human"
+                style="@style/Bordered"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="8dp"
-                android:text="Сохранить" />
+                android:layout_margin="4dp"
+                android:orientation="vertical"
+                android:padding="4dp"
+                android:visibility="visible">
 
+                <TextView
+                    android:id="@+id/label_edit_oper_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Имя оператора:" />
+
+                <EditText
+                    android:id="@+id/edit_oper_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="text" />
+
+                <TextView
+                    android:id="@+id/label_edit_oper_login"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Логин оператора:" />
+
+                <EditText
+                    android:id="@+id/edit_oper_login"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="text" />
+
+                <TextView
+                    android:id="@+id/label_edit_oper_password"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Пароль оператора:" />
+
+                <EditText
+                    android:id="@+id/edit_guest_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="text" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/label_male2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="жен." />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/s_oper_sex"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/label_female2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="муж." />
+
+                    <CheckBox
+                        android:id="@+id/check_admin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Админ" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/b_oper_save"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="8dp"
+                    android:text="Сохранить" />
+
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_operators"
+        android:id="@+id/rv_people"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/b_change_mode"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scroll_oper">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_rooms"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/b_change_mode"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scroll_oper" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_operator"
+        android:id="@+id/fab_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="20dp"
@@ -131,7 +240,7 @@
         android:id="@+id/b_change_mode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Работа с комнатами"
+        android:text="К работе с комнатами"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

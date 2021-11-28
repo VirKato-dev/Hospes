@@ -50,9 +50,8 @@ public class OperatorActivity extends AppCompatActivity {
     private FloatingActionButton fab_add_guest;
 
     private ArrayList<Human> guests;
-    private ArrayList<Room> rooms;
     private ArrayList<String> freeRooms;
-    private RvAdapter adapter;
+    private RvPeopleAdapter adapter;
     private Human man = new Human();
     private boolean hasFree;
 
@@ -103,16 +102,16 @@ public class OperatorActivity extends AppCompatActivity {
         // задать способ взаимного расположения элементов списка на экране (Вертикальный скролл)
         rv_guests.setLayoutManager(new LinearLayoutManager(this));
         // привязать список сотрудников и задать тип Посетители
-        adapter = new RvAdapter(guests, "g");
+        adapter = new RvPeopleAdapter(guests, "g");
         // задать обработчик короткого нажатия на элемент списка
-        adapter.setClickListener(new RvAdapter.ItemClickListener() {
+        adapter.setClickListener(new RvPeopleAdapter.ItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
                 editGuestData(adapter.getItem(position));
             }
         });
         // задать обработчик долгого нажатия на элемент списка
-        adapter.setLongClickListener(new RvAdapter.ItemLongClickListener() {
+        adapter.setLongClickListener(new RvPeopleAdapter.ItemLongClickListener() {
             @Override
             public void onItemClick(View view, int position) {
                 removeGuestData(adapter.getItem(position));
@@ -194,7 +193,7 @@ public class OperatorActivity extends AppCompatActivity {
     private void updateCostOfRoom() {
         if (freeRooms.size() > 0) {
             double cost = Repository.findRoomByNum(freeRooms.get(spin_room_num.getSelectedItemPosition())).cost;
-            t_room_info_cost.setText(new DecimalFormat("#0.00").format(cost));
+            t_room_info_cost.setText(String.format(Locale.ENGLISH, "%.2f", cost));
         }
     }
 
@@ -202,6 +201,9 @@ public class OperatorActivity extends AppCompatActivity {
      * Показать форму для создания нового посетителя
      */
     private void addNewGuest() {
+        // не режим редактирования
+        man = new Human();
+        fab_add_guest.setVisibility(View.GONE);
         // Показать пустую форму для создания нового посетителя
         l_edit_guest.setVisibility(View.VISIBLE);
         edit_guest_name.setText("");
@@ -210,9 +212,6 @@ public class OperatorActivity extends AppCompatActivity {
         edit_guest_note.setText("");
         s_sex.setChecked(false);
         setRoomType(2);
-        // не режим редактирования
-        man = new Human();
-        fab_add_guest.setVisibility(View.GONE);
     }
 
     /***
@@ -220,18 +219,23 @@ public class OperatorActivity extends AppCompatActivity {
      * @param man редактируемый посетитель
      */
     private void editGuestData(Human man) {
+        // режим редактирования
+        this.man = man;
+        fab_add_guest.setVisibility(View.GONE);
         // заполняем форму соответствующими данными
         // распаковываем name для получения данных об Имени, Отчестве и Фамилии
-        String[] val = man.name.split("~");
+        String[] val = man.name.split("֍");
         String name = val[0]; // имя
         String surname = val[1]; // отчество
         String family = val[2]; // фамилия
         // распаковываем password для получения данных о заселении
-        String[] mRoom = man.password.split("~");
+        String[] mRoom = man.password.split("֍");
         String num = mRoom[0]; // номер комнаты
         long arriveDate = Long.parseLong(mRoom[1]); // дата заселения
         long departDate = Long.parseLong(mRoom[2]); // дата выселения
-        String notes = mRoom[3]; // примечания
+        String notes = "";
+        if (mRoom.length >3) notes = mRoom[3]; // примечания может отсутствовать
+        // потому что при парсинге, для последнего пустого элемента не создаётся элемент массива
 
         l_edit_guest.setVisibility(View.VISIBLE);
         edit_guest_name.setText(name);
@@ -240,29 +244,36 @@ public class OperatorActivity extends AppCompatActivity {
         edit_guest_note.setText(notes);
         s_sex.setChecked(man.sex);
         Room room = Repository.findRoomByNum(num);
-        spin_room_type.setSelection(room.type);
+        t_room_info_cost.setText(String.format(Locale.ENGLISH, "%.2f", room.cost));
+        t_date_arrive.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(arriveDate));
+        t_date_depart.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(departDate));
+        setRoomType(room.type);
+        updateFreeRooms(man.login);
         spin_room_num.setSelection(freeRooms.indexOf(num));
-        t_room_info_cost.setText(new DecimalFormat("#0.00").format(room.cost));
-        t_date_arrive.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(String.valueOf(arriveDate)));
-        t_date_depart.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(String.valueOf(departDate)));
-        // режим редактирования
-        this.man = man;
-        fab_add_guest.setVisibility(View.GONE);
     }
 
     /***
-     * Удалить данные оператора
-     * @param man удаляемый сотрудник
+     * Удалить данные гостя
+     * @param man удаляемый гость
      */
     private void removeGuestData(Human man) {
+        // поставим фамилию перед именем
+        String[] val = man.name.split("֍");
+        String name = val[2] + " " + val[0] + " " + val[1];
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Удаление посетителя");
-        builder.setMessage("Вы действительно желаете удалить этого посетителя\n" + man.name + " из базы?");
+        builder.setMessage("Вы действительно желаете удалить этого посетителя '" + name + "' из базы?");
         builder.setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Удалить человека из базы (посетитель в данном случае)
                 Repository.removeHumanByLogin(man.login);
+                // Получить обновлённый список гостей
+                ArrayList<Human> people = Repository.getPeople(true);
+                // Показать обновлённый список гостей
+                adapter.setNewList(people);
+                l_edit_guest.setVisibility(View.GONE);
             }
         });
         builder.setNegativeButton("Отменить", new DialogInterface.OnClickListener() {
@@ -279,11 +290,15 @@ public class OperatorActivity extends AppCompatActivity {
      * Сохранить данные посетителя (переменная Human:man)
      */
     private void saveGuestData() {
+        if (!hasFree) {
+            Toast.makeText(this, "Нет свободный комнат на указанные даты", Toast.LENGTH_LONG).show();
+            return;
+        }
         String n1 = edit_guest_name.getText().toString().trim();
         String n2 = edit_guest_surname.getText().toString().trim();
         String n3 = edit_guest_family.getText().toString().trim();
-        String name = n1 + "~" + n2 + "~" + n3;
-        String p1 = "" + spin_room_num.getSelectedItemPosition();
+        String name = n1 + "֍" + n2 + "֍" + n3;
+        String p1 = "" + freeRooms.get(spin_room_num.getSelectedItemPosition());
         String p21 = t_date_arrive.getText().toString();
         String p31 = t_date_depart.getText().toString();
         if (p21.equals("") || p31.equals("")) {
@@ -297,35 +312,40 @@ public class OperatorActivity extends AppCompatActivity {
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                         .parse(p31, new ParsePosition(0)).getTime());
         String p4 = edit_guest_note.getText().toString().trim();
-        String password = p1 + "~" + p2 + "~" + p3 + "~" + p4;
-        String login = generateUID();
+        String password = p1 + "֍" + p2 + "֍" + p3 + "֍" + p4;
 
         if ("".equals(n1) || "".equals(n3) || "".equals(p1) || !hasFree) {
             Toast.makeText(this, "Поля 'Имя', 'Фамилия', 'Комната' должны быть заполнены", Toast.LENGTH_LONG).show();
         } else {
+            String login;
             // Когда все обязательные поля заполнены.
             if (!man.login.equals("")) {
                 // man здесь хранит данные о человеке выбранном из списка или ничего.
-                // Человек без данных - режим создания.
                 // Логин не пустой - режим редактирования.
+                login = man.login;
                 // Перед внесением изменений в базу нужно удалить старые данные из базы.
                 Repository.removeHumanByLogin(man.login);
                 // Потому что наша база не умеет обновлять имеющиеся данные.
+            } else {
+                // Человек без данных - режим создания.
+                // Выдать новый идентификатор
+                login = generateUID();
             }
             // Создаём человека и указываем его данные
             man = new Human();
-            man.name = name;
             man.login = login;
+            man.name = name;
             man.password = password;
             man.sex = s_sex.isChecked();
+            man.isGuest = true;
             // Проверяем уникальность логина
             Human h = Repository.findHumanById(man.login);
             if (h.login.equals("")) {
                 // Когда не найден человек с таким логином - можно добавить человека с этим логином
                 Repository.addOperator(man);
-                // Получить обновлённый список сотрудников (админы, операторы)
-                ArrayList<Human> people = Repository.getPeople(false);
-                // Показать обновлённый список сотрудников
+                // Получить обновлённый список гостей
+                ArrayList<Human> people = Repository.getPeople(true);
+                // Показать обновлённый список гостей
                 adapter.setNewList(people);
                 // Спрятать форму редактирования данных
                 l_edit_guest.setVisibility(View.GONE);
@@ -334,17 +354,18 @@ public class OperatorActivity extends AppCompatActivity {
             } else {
                 // Скопировано из кода AdminActivity.java
                 // Здесь этот блок кода является бессмысленным так как проверка идентификатора уже сделана выше
-                Toast.makeText(this, "Посетитель с таким идентификатором уже существует", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Посетитель с таким идентификатором уже существует", Toast.LENGTH_LONG).show();
             }
         }
     }
 
 
     private String generateUID() {
+        Human man;
         String newUID;
         do {
             newUID = "id" + new Random().nextInt();
-            Human man = Repository.findHumanById(newUID);
+            man = Repository.findHumanById(newUID);
         } while (!man.login.equals(""));
         // когда не нашёлся человек с таким идентификатором
         return newUID;

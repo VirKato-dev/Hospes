@@ -132,7 +132,7 @@ public class Repository {
      * @param login логин/идентификатор человека
      */
     public static void removeHumanByLogin(String login) {
-        // исключить случай
+        // сделать копию файла для последующего обновления данных
         File file_from = new File(dir, "users.db");
         if (file_from.exists()) file_from.renameTo(new File(dir, "users.bak"));
         File file_to = new File(dir, "users.db");
@@ -180,6 +180,57 @@ public class Repository {
 
 
     /***
+     * Удалить комнату из файла
+     * @param number номер комнаты
+     */
+    public static void removeRoomByNum(String number) {
+        // сделать копию файла для последующего обновления данных
+        File file_from = new File(dir, "rooms.db");
+        if (file_from.exists()) file_from.renameTo(new File(dir, "rooms.bak"));
+        File file_to = new File(dir, "rooms.db");
+
+        try {
+            file_from = new File(dir, "rooms.bak");
+            if (!file_from.exists()) {
+                file_from.createNewFile();
+            }
+            if (!file_to.exists()) {
+                file_to.createNewFile();
+            }
+            InputStream fis = new FileInputStream(file_from);
+
+            Reader reader = new InputStreamReader(fis, StandardCharsets.UTF_8);
+            FileWriter writer = new FileWriter(file_to, true);
+
+            Scanner scanner = new Scanner(reader);
+            scanner.useDelimiter("\n"); // разделитель строк
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String[] values = line.split("\\|");
+                Room room = new Room();
+                room.type = Integer.parseInt(values[0]);
+                room.number = values[1];
+                room.cost = Double.parseDouble(values[2]);
+                room.description = values[3];
+                if (!room.number.equals(number)) {
+                    // записать в новый файл
+                    line = room.type + "|" + room.number + "|" + room.cost + "|" +
+                            room.description + "\n";
+                    writer.write(line);
+                    writer.flush();
+                }
+            }
+            writer.close();
+            fis.close();
+        } catch (IOException e) {
+            Log.e("REPOSITORY remove", e.getMessage());
+        }
+
+        file_from.delete();
+    }
+
+
+    /***
      * добавить человека в файл
      * @param man человек
      */
@@ -193,6 +244,29 @@ public class Repository {
             Writer fw = new FileWriter(file, true);
             String line = man.name + "|" + man.login + "|" + man.password + "|" +
                     man.isAdmin + "|" + man.isGuest + "|" + man.sex + "\n";
+            fw.write(line);
+            fw.flush();
+            fw.close();
+        } catch (IOException e) {
+            Log.e("REPOSITORY add", e.getMessage());
+        }
+    }
+
+
+    /***
+     * Добавить комнату в файл
+     * @param room комната
+     */
+    public static void addRoom(Room room) {
+        File file = new File(dir, "rooms.db");
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            // открыть файл в режиме добавления текста
+            Writer fw = new FileWriter(file, true);
+            String line = room.type + "|" + room.number + "|" + room.cost + "|" +
+                    room.description + "\n";
             fw.write(line);
             fw.flush();
             fw.close();
@@ -252,23 +326,26 @@ public class Repository {
     public static ArrayList<String> getFreeRooms(int type, long arriveDate, long departDate, String guestId) {
         ArrayList<Room> rooms = getRooms(type);
         ArrayList<String> freeRooms = new ArrayList<>();
-        for (Room r : rooms) {
-            freeRooms.add(r.number);
-        }
         ArrayList<Human> guests = getPeople(true);
-        for (Human h : guests) {
-            // анализируем данные каждого посетителя
-            String[] val = h.password.split("~");
-            // разбираем поле password
-            // у посетителя это поле содержит больше информации, чем у сотрудника
-            long aDate = Long.parseLong(val[1]); // arriveDate
-            long dDate = Long.parseLong(val[2]); // departDate
-            if (h.login.equals(guestId)) {
-                // не удалять комнату из списка свободных, если в ней редактируемый посетитель
-            } else if ((aDate < arriveDate || dDate >= departDate) || (arriveDate+departDate == 0)) {
-                // если в указанный период комната уже кем-то заселена
-                freeRooms.remove(val[0]); // добавить номер комнаты в список свободных комнат
+        for (Room r : rooms) {
+            boolean isFree = true;
+            for (Human h : guests) {
+                // анализируем данные каждого посетителя
+                String[] val = h.password.split("֍");
+                // разбираем поле password
+                // у посетителя это поле содержит больше информации, чем у сотрудника
+                // 3 значения обязательных: номер комнаты и две даты
+                long aDate = Long.parseLong(val[1]); // arriveDate
+                long dDate = Long.parseLong(val[2]); // departDate
+                if ((aDate <= arriveDate && arriveDate <= dDate) || ((aDate <= departDate && departDate <= dDate))) {
+                    // если в указанный период комната уже кем-то заселена
+                    if (!h.login.equals(guestId)) {
+                        // если это не текущий редактируемый посетитель
+                        isFree = false;
+                    }
+                }
             }
+            if (isFree) freeRooms.add(r.number);
         }
         return freeRooms;
     }
@@ -286,6 +363,6 @@ public class Repository {
             if (r.number.equals(num)) return r;
         }
         // если нет комнаты с таким номером
-        return null;
+        return new Room();
     }
 }
